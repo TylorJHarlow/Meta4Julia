@@ -1,0 +1,13 @@
+name = "Meta4Julia"
+uuid = "69d857ce-6415-44e8-839e-cc2cde09e663"
+authors = ["Tylor J Harlow", "Matthew B Jane"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.6.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
