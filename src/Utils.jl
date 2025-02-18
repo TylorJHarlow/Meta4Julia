@@ -105,7 +105,7 @@ function (s::bSpline)(x::AbstractVector{<:Real})
 end
 
 # Module-specific StatsModels.modelcols
-function StatsModels.modelcols(ft::FunctionTerm{Main.meta4julia.bSpline, T}, d::NamedTuple) where T
+function StatsModels.modelcols(ft::FunctionTerm{Main.jMeta.bSpline, T}, d::NamedTuple) where T
     
     # Extract literal arguments: number of knots and order
     kn = ft.f.knots
