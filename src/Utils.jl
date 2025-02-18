@@ -1,11 +1,11 @@
 
 
 # Run Restricted maximum liklihood estiamtion on meta regression model
-function reml(df::DataFrame, v::Vector{Float64}, type::String, formula::FormulaTerm, iter::Int, tol::Float64)
+function reml(df::DataFrame, v::Vector{Float64}, formula::FormulaTerm, iter::Int, tol::Float64)
 
     # This function computes metaregression between the moderators specified in 
     # mods and the outcome variables specified in the DataFrame df. REML is used
-    # in the estiamtion of the β coefficients, with the DerSimonian & Laird being
+    # in the estimation of the β coefficients, with the DerSimonian & Laird being
     # used as the initial estimate.
 
     # Get outcome variables & moderator matrix

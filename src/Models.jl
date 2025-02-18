@@ -50,10 +50,14 @@ end
 
 # Meta analysis function
 # Basic Fixed effects version
-function meta(df::DataFrame ; type::String = "SMD", α::Float64=0.05,di=:d, vi=:v)
+function meta(df::DataFrame ; α::Float64=0.05, di=:d, vi=:v, se::Bool = false)
 
     # Unpack
-    d,v = transform(df,type,df[!,di],df[!,vi])
+    d = df[!,di]
+    v = df[!,vi]
+
+    # Check standard errors vs. variance
+    if se; v = v.^2; end
 
     # Basic Fixed effects meta
     w = 1 ./ v
@@ -77,14 +81,18 @@ function meta(df::DataFrame ; type::String = "SMD", α::Float64=0.05,di=:d, vi=:
     I2 = 100 * (Q - (k - 1)) ./ Q
 
     # Send out
-    return mdl(df, "Fixed Effects Meta-Analysis", μ, V, CI, PI, sqrt.(v), Q, τ2, I2)
+    return mdl(df, raw"Fixed Effects Meta-Analysis", μ, V, CI, PI, sqrt.(v), Q, τ2, I2)
 end
 
 # Larger, meta-regression approach
-function meta(df::DataFrame,formula::FormulaTerm; type::String = "SMD", vi=:v, α::Float64=0.05, iter::Int=1000, tol::Float64=1e-8)
+function meta(df::DataFrame,formula::FormulaTerm; vi=:v, se::Bool = false, α::Float64=0.05, iter::Int=1000, tol::Float64=1e-8)
+
+    # Check standard errors vs. variance
+    v = df[!,vi]
+    if se; v = v.^2; end
 
     # Call Meta Regression
-    d, v, w, μ, Q, τ2, β, covβ, seβ = reml(df,df[!,vi],type,formula,iter,tol)
+    d, v, w, μ, Q, τ2, β, covβ, seβ = reml(df,v,formula,iter,tol)
 
     # Get confidence intervals
     z = quantile(Normal(0, 1), 1 - α / 2)
@@ -97,7 +105,6 @@ function meta(df::DataFrame,formula::FormulaTerm; type::String = "SMD", vi=:v, �
     I2 = 100 * (Q - (k - 1)) ./ Q
 
     # Send out
-    return MRmdl(df, "Meta-Regression", μ, V, CI, PI, sqrt.(v), β, covβ, seβ, Q, τ2, I2)
-
+    return MRmdl(df, raw"Meta-Regression", μ, V, CI, PI, sqrt.(v), β, covβ, seβ, Q, τ2, I2)
 
 end
