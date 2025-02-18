@@ -3,9 +3,6 @@
 # Loads in Baskerville 2012 & tests intercept model
 function testFixedEffects()
 
-    # Load in necessary modules
-    using Meta4Julia, RData, DataFrames
-
     # Select chosen meta-analysis to analyze
     study = "metadat-master/data/dat.baskerville2012.rda"
     obj = load(study)
@@ -21,9 +18,6 @@ end
 
 # Loads in Baskerville 2012 & tests 
 function testClusterRobust()
-
-    # Load in necessary modules
-    using Meta4Julia, RData, DataFrames
 
     # Select chosen meta-analysis to analyze
     study = "metadat-master/data/dat.baskerville2012.rda"
