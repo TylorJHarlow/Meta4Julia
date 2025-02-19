@@ -50,14 +50,11 @@ end
 
 # Meta analysis function
 # Basic Fixed effects version
-function meta(df::DataFrame ; α::Float64=0.05, di=:d, vi=:v, se::Bool = false)
+function meta(df::DataFrame ; α::Float64=0.05, d=:d, v=:v)
 
     # Unpack
-    d = df[!,di]
-    v = df[!,vi]
-
-    # Check standard errors vs. variance
-    if se; v = v.^2; end
+    d = df[!,d]
+    v = df[!,v]
 
     # Basic Fixed effects meta
     w = 1 ./ v
@@ -85,11 +82,10 @@ function meta(df::DataFrame ; α::Float64=0.05, di=:d, vi=:v, se::Bool = false)
 end
 
 # Larger, meta-regression approach
-function meta(df::DataFrame,formula::FormulaTerm; vi=:v, se::Bool = false, α::Float64=0.05, iter::Int=1000, tol::Float64=1e-8)
+function meta(df::DataFrame,formula::FormulaTerm; v = :v, α::Float64=0.05, iter::Int=1000, tol::Float64=1e-8)
 
     # Check standard errors vs. variance
-    v = df[!,vi]
-    if se; v = v.^2; end
+    v = df[!,v]
 
     # Call Meta Regression
     d, v, w, μ, Q, τ2, β, covβ, seβ = reml(df,v,formula,iter,tol)
