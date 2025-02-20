@@ -4,6 +4,7 @@ struct mdl <: model
     df::DataFrame
     Type::String
     Mu::Float64
+    Weights::Vector{Float64}
     V::Float64
     CI::Vector{Float64}
     PI::Vector{Float64}
@@ -15,10 +16,12 @@ struct mdl <: model
 end
 
 # Define Meta regression model
-struct MRmdl <: model
+mutable struct MRmdl <: model
     df::DataFrame
     Type::String
+    Formula::FormulaTerm
     Mu::Float64
+    Weights::Vector{Float64}
     V::Float64
     CI::Vector{Float64}
     PI::Vector{Float64}
@@ -30,6 +33,7 @@ struct MRmdl <: model
     Qp::Float64
     Tau2::Float64
     I2::Float64
+    Clusters::Symbol
 end
 
 # This main function of this package offers to main methods of choice. The first is a basic 
@@ -83,11 +87,11 @@ function meta(df::DataFrame ; α::Float64=0.05, d=:d, v=:v)
     I2 = 100 * (Q - (k - 1)) ./ Q
 
     # Send out
-    return mdl(df, raw"Fixed Effects Meta-Analysis", μ, V, CI, PI, sqrt.(v), Q, Qp, τ2, I2)
+    return mdl(df, raw"Fixed Effects Meta-Analysis", μ, w, V, CI, PI, sqrt.(v), Q, Qp, τ2, I2)
 end
 
 # Larger, meta-regression approach
-function meta(df::DataFrame,formula::FormulaTerm; v = :v, α::Float64=0.05, iter::Int=1000, tol::Float64=1e-8)
+function meta(df::DataFrame,formula::FormulaTerm; v = :v, clusters = :clusters, α::Float64=0.05, iter::Int=1000, tol::Float64=1e-8)
 
     # Check standard errors vs. variance
     v = df[!,v]
@@ -102,6 +106,6 @@ function meta(df::DataFrame,formula::FormulaTerm; v = :v, α::Float64=0.05, iter
     PI = [μ - (z * sqrt(V + τ2)), μ + (z * sqrt(V + τ2))]
 
     # Send out
-    return MRmdl(df, raw"Meta-Regression", μ, V, CI, PI, sqrt.(v), β, covβ, seβ, Q, Qp, τ2, I2)
+    return MRmdl(df, raw"Meta-Regression", formula, μ, w, V, CI, PI, sqrt.(v), β, covβ, seβ, Q, Qp, τ2, I2, clusters)
 
 end

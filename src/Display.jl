@@ -17,7 +17,7 @@ function show(io::IO, mdl::model)
     i2   = mdl.I2
 
     # Print summary row
-    z = (mu / se)
+    z = (mu / se) # Change to TTEST
     pz = 2 * (1 - cdf(Normal(0,1), abs(z)))  # approximate p-value
     
     println(io, @sprintf("Estimate:                                %8.3f", mu))
@@ -78,7 +78,7 @@ function show(io::IO, mdl::MRmdl)
         upper = b + z_crit * sb
 
         if j == 1
-            param_name = @sprintf("Intercept", j - 1)
+            param_name = @sprintf("Intercept")
         else
             param_name = @sprintf("B[%d]", j - 1)  # or more descriptive if you know the mod names
         end

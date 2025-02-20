@@ -1,5 +1,4 @@
-
-
+## MAIN FUNCTION
 # Run Restricted maximum liklihood estiamtion on meta regression model
 function reml(df::DataFrame, v::Vector{Float64}, formula::FormulaTerm, iter::Int, tol::Float64)
 
@@ -88,7 +87,8 @@ function reml(df::DataFrame, v::Vector{Float64}, formula::FormulaTerm, iter::Int
 end
 
 
-## Organizing spline objects in meta formulas
+
+## ORGANIZING SPLINE OBJECTS
 # Define bSpline object
 struct bSpline
     knots::Int
@@ -135,6 +135,63 @@ function StatsModels.modelcols(ft::FunctionTerm{Main.jMeta.bSpline, T}, d::Named
 end
 
 
+
+## ROBUST VARIANCE ESTIMATION
+# Correlated effects robust variance estimation
+function rve(mdl::model; method::String = "CE")
+    # Unpack necessary 
+    df = mdl.df
+    w = mdl.Weights
+    clusters = df[!,mdl.Clusters]
+    formula = mdl.Formula
+    β = mdl.Beta
+    
+    # Get outcome variables & moderator matrix
+    sch = schema(formula,df)
+    ts = apply_schema(formula,sch)
+    d,M = modelcols(ts,df)
+
+    # Compute residuals
+    R = d .- (M * β)
+
+    # Get bread for sandwich
+    bread = pinv(M' * diagm(w) * M)
+
+    # Initialize variance covariance matrix
+    k,p = size(M)
+    meat = zeros(Float64,p,p)
+
+    # Loop through clusters & construct meat
+    clusts = unique(clusters)
+    for c in clusts
+
+        # Subset matrices into unique elements
+        idx = findall(x -> x == c, clusters)
+        Mc = M[idx,:]
+        Rc = R[idx]
+        Wc = diagm(w[idx])
+
+        # Add meat to sandhwich
+        meat += Mc' * Wc * (Rc * Rc') * Wc * Mc
+    end
+
+    # Small sample correction factor
+    C = length(clusts)
+    f = (C / (C - 1)) * ((k - 1) / (k - p))
+    meat .*= f
+
+    # Get Variance covariance matrix
+    vc = bread * meat * bread
+    se = sqrt.(diag(vc))
+
+    # Return variance covariance matrix & updated standard errors
+    mdl.SEBeta = se
+    return mdl
+end
+
+
+
+## GENERATING PREDICTIONS
 # Generate dataframe for predicted outcomes
 function predFrame(data::StepRangeLen{T},vars::String) where T
 

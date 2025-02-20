@@ -7,7 +7,7 @@ using LinearAlgebra, DataFrames, Distributions, Plots, Printf, BSplineKit, Stats
 
 # Inputs & Outputs
 import Base: show
-export meta, predict, forest, funnel, s, modelcols, predFrame, @formula, DataFrame
+export meta, predict, forest, funnel, s, modelcols, predFrame, @formula, DataFrame, rve
 
 # Define model type
 abstract type model end
