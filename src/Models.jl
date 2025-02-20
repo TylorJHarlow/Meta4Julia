@@ -9,6 +9,7 @@ struct mdl <: model
     PI::Vector{Float64}
     SE::Vector{Float64}
     Q::Float64
+    Qp::Float64
     Tau2::Float64
     I2::Float64
 end
@@ -26,6 +27,7 @@ struct MRmdl <: model
     CovBeta::Matrix{Float64}
     SEBeta::Vector{Float64}
     Q::Float64
+    Qp::Float64
     Tau2::Float64
     I2::Float64
 end
@@ -88,7 +90,7 @@ function meta(df::DataFrame,formula::FormulaTerm; v = :v, α::Float64=0.05, iter
     v = df[!,v]
 
     # Call Meta Regression
-    d, v, w, μ, Q, τ2, β, covβ, seβ = reml(df,v,formula,iter,tol)
+    d, v, w, μ, Q, Qp, τ2, I2, β, covβ, seβ = reml(df,v,formula,iter,tol)
 
     # Get confidence intervals
     z = quantile(Normal(0, 1), 1 - α / 2)
@@ -96,11 +98,7 @@ function meta(df::DataFrame,formula::FormulaTerm; v = :v, α::Float64=0.05, iter
     CI = [μ - (z * sqrt(V)), μ + (z * sqrt(V))]
     PI = [μ - (z * sqrt(V + τ2)), μ + (z * sqrt(V + τ2))]
 
-    # Get I2
-    k = size(df,1)
-    I2 = 100 * (Q - (k - 1)) ./ Q
-
     # Send out
-    return MRmdl(df, raw"Meta-Regression", μ, V, CI, PI, sqrt.(v), β, covβ, seβ, Q, τ2, I2)
+    return MRmdl(df, raw"Meta-Regression", μ, V, CI, PI, sqrt.(v), β, covβ, seβ, Q, Qp, τ2, I2)
 
 end
