@@ -53,11 +53,26 @@ function reml(df::DataFrame, v::Vector{Float64}, formula::FormulaTerm, iter::Int
 
     # Update
     w = 1 ./ (v .+ τ2)
+    w = 100 .* (w ./ sum(w))
     μ = sum(w .* d) / sum(w)
     W = diagm(w)
 
-    # Q-statistic
-    Q = sum(w .* (d .- μ) .^ 2)
+    # Get fixed effects weights & beta for Q-statistic
+    fw = 1 ./ v
+    FW = diagm(fw)
+    fM = (M' * FW * M)
+    stXfWX = inv(fM)
+    fB = stXfWX * (M' * FW) * d
+    res = d .- (M * fB)
+    Q = sum(fw .* (res .^ 2))
+
+    # Estiamte I2
+    k,p = size(M)
+    vtot = (k - p) ./ (sum(fw) - sum(fw.^2) ./ sum(fw))
+    I2 = 100 * τ2 / (τ2 + vtot)
+
+    # Evaluate Chisq
+    Qp = cdf(Chisq(k - p), Q)
 
     # Get beta coefficients
     m = (M' * W * M)
@@ -69,7 +84,7 @@ function reml(df::DataFrame, v::Vector{Float64}, formula::FormulaTerm, iter::Int
     seβ = sqrt.(diag(covβ))
 
     # Send out the goods
-    return d, v, w, μ, Q, τ2, β, covβ, seβ
+    return d, v, w, μ, Q, Qp, τ2, I2, β, covβ, seβ
 end
 
 
