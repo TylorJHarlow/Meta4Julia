@@ -20,7 +20,7 @@ function show(io::IO, mdl::model)
     z = (mu / se)
     pz = 2 * (1 - cdf(Normal(0,1), abs(z)))  # approximate p-value
     
-    println(io, @sprintf("Estimate (d̄):                            %8.3f", mu))
+    println(io, @sprintf("Estimate:                                %8.3f", mu))
     println(io, @sprintf("Std Error:                               %8.3f", se))
     println(io, @sprintf("95%% CI:                                 [%5.3f, %5.3f]", ci[1], ci[2]))
     println(io, @sprintf("95%% PI:                                 [%5.3f, %5.3f]", pi[1], pi[2]))
@@ -51,7 +51,7 @@ function show(io::IO, mdl::MRmdl)
     i2   = mdl.I2
 
     # Summarize the intercept if you like (optional):
-    println(io, @sprintf("Overall (d̄):                                             %8.3f", mu))
+    println(io, @sprintf("Overall:                                                 %8.3f", mu))
     println(io, @sprintf("Std Error:                                               %8.3f", se))
     println(io, @sprintf("95%% CI:                                                 [%5.3f, %5.3f]", ci[1], ci[2]))
     println(io, "")
@@ -77,7 +77,11 @@ function show(io::IO, mdl::MRmdl)
         lower = b - z_crit * sb
         upper = b + z_crit * sb
 
-        param_name = @sprintf("B[%d]", j - 1)  # or more descriptive if you know the mod names
+        if j == 1
+            param_name = @sprintf("Intercept", j - 1)
+        else
+            param_name = @sprintf("B[%d]", j - 1)  # or more descriptive if you know the mod names
+        end
         println(io, @sprintf("%-12s  %10.3f  %10.3f    [%5.3f, %5.3f]  %10.4g", 
             param_name, b, sb, lower, upper, p))
     end 
