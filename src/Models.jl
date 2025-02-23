@@ -91,7 +91,7 @@ function meta(df::DataFrame ; α::Float64=0.05, d=:d, v=:v)
 end
 
 # Larger, meta-regression approach
-function meta(df::DataFrame,formula::FormulaTerm; v = :v, clusters = :clusters, α::Float64=0.05, iter::Int=1000, tol::Float64=1e-8)
+function meta(df::DataFrame,formula::FormulaTerm; v = :v, clusters = :clusters, α::Float64=0.05, iter::Int=100, tol::Float64=1e-5)
 
     # Check standard errors vs. variance
     v = df[!,v]

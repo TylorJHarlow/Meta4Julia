@@ -52,7 +52,7 @@ function reml(df::DataFrame, v::Vector{Float64}, formula::FormulaTerm, iter::Int
 
     # Update
     w = 1 ./ (v .+ τ2)
-    w = 100 .* (w ./ sum(w))
+    # w = 100 .* (w ./ sum(w))
     μ = sum(w .* d) / sum(w)
     W = diagm(w)
 

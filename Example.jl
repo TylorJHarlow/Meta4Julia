@@ -13,5 +13,8 @@ df[!,:v] .= df[!,:se].^2
 f = @formula(smd ~ 1)
 
 # Run simple equal-effects meta-analysis
-mdl = meta(df, f; v = :v)
+mdl = meta(df, f; v = :v, clusters = :country)
 show(mdl)
+
+# Robust variance estiamtion
+rve(mdl)
