@@ -138,7 +138,7 @@ end
 
 ## ROBUST VARIANCE ESTIMATION
 # Correlated effects robust variance estimation
-function rve(mdl::model; method::String = "CE")
+function rve(mdl::model; method::String = "CR0", smallsample::Bool = true)
     # Unpack necessary 
     df = mdl.df
     w = mdl.Weights
@@ -161,8 +161,20 @@ function rve(mdl::model; method::String = "CE")
     k,p = size(M)
     meat = zeros(Float64,p,p)
 
-    # Loop through clusters & construct meat
+    # Switch case for determing method
     clusts = unique(clusters)
+    C = length(clusts)
+    if method == "CR0"
+        Ac = I
+    elseif method == "CR1"
+        c = sqrt( C / (C - 1) )
+        Ac = c * I
+    elseif method == "CR2"
+        sqrW = diagm(sqrt.(w))
+        H = sqrW * M * bread * M' * sqrW
+    end
+
+    # Loop through clusters & construct meat
     for c in clusts
 
         # Subset matrices into unique elements
@@ -171,14 +183,38 @@ function rve(mdl::model; method::String = "CE")
         Rc = R[idx]
         Wc = diagm(w[idx])
 
+        # Switch statment for CR2 method
+        if method == "CR2"
+
+            # Estimate from Imbens & Kolesar 2016
+            Phi = (Rc * Rc')
+            i = CartesianIndices(Phi) 
+            f = filter(x -> x.I[1] ≠ x.I[2], i)
+            n = size(Phi,1)
+            b = reshape(Phi'[f], n - 1, n)'
+            if length(idx) > 1; ρc = sum(b) ./ length(b);
+            else; ρc = 1; end
+            Phi = ρc .* ones(Float64,n,n)
+            Phi[diagind(Phi)] .= 1
+
+            # Cholesky factorization of error covariance & finalize Pustejovsky & Tipton 2018
+            D = cholesky(Phi).U
+            Hc = H[idx,idx]
+            B = D * (I - Hc) * (Rc * Rc') * (I - Hc)' * D'
+            Ac = D' * sqrt(Symmetric(pinv(B))) * D
+            Ac = Ac * (I - Hc)
+            Mc = (I - Hc) * Mc
+        end
+
         # Add meat to sandhwich
-        meat += Mc' * Wc * (Rc * Rc') * Wc * Mc
+        meat += Mc' * Wc * Ac * (Rc * Rc') * Ac * Wc * Mc
     end
 
     # Small sample correction factor
-    C = length(clusts)
-    f = (C / (C - 1)) * ((k - 1) / (k - p))
-    meat .*= f
+    if smallsample
+        f = (C / (C - 1)) * ((k - 1) / (k - p))
+        meat .*= f
+    end
 
     # Get Variance covariance matrix
     vc = bread * meat * bread
