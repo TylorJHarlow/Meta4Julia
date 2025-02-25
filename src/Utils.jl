@@ -152,7 +152,7 @@ function rve(mdl::model; method::String = "CR0", smallsample::Bool = true)
     d,M = modelcols(ts,df)
 
     # Compute residuals
-    R = d .- (M * β)
+    e = d .- (M * β)
 
     # Get bread for sandwich
     bread = pinv(M' * diagm(w) * M)
@@ -170,8 +170,7 @@ function rve(mdl::model; method::String = "CR0", smallsample::Bool = true)
         c = sqrt( C / (C - 1) )
         Ac = c * I
     elseif method == "CR2"
-        sqrW = diagm(sqrt.(w))
-        H = sqrW * M * bread * M' * sqrW
+        Phi = inv(diagm(w))
     end
 
     # Loop through clusters & construct meat
@@ -180,34 +179,24 @@ function rve(mdl::model; method::String = "CR0", smallsample::Bool = true)
         # Subset matrices into unique elements
         idx = findall(x -> x == c, clusters)
         Mc = M[idx,:]
-        Rc = R[idx]
+        ec = e[idx]
         Wc = diagm(w[idx])
 
         # Switch statment for CR2 method
         if method == "CR2"
-
-            # Estimate from Imbens & Kolesar 2016
-            Phi = (Rc * Rc')
-            i = CartesianIndices(Phi) 
-            f = filter(x -> x.I[1] ≠ x.I[2], i)
-            n = size(Phi,1)
-            b = reshape(Phi'[f], n - 1, n)'
-            if length(idx) > 1; ρc = sum(b) ./ length(b);
-            else; ρc = 1; end
-            Phi = ρc .* ones(Float64,n,n)
-            Phi[diagind(Phi)] .= 1
+            # Collect local Phi matrix
+            phi = Phi[idx,idx]
+            Hc = I - H
+            Hc = Hc[idx,:]
 
             # Cholesky factorization of error covariance & finalize Pustejovsky & Tipton 2018
-            D = cholesky(Phi).U
-            Hc = H[idx,idx]
-            B = D * (I - Hc) * (Rc * Rc') * (I - Hc)' * D'
-            Ac = D' * sqrt(Symmetric(pinv(B))) * D
-            Ac = Ac * (I - Hc)
-            Mc = (I - Hc) * Mc
+            Dc = cholesky(phi).U
+            Bc = Dc * Hc * Phi * Hc' * Dc'
+            Ac = Dc' * sqrt(Symmetric(pinv(Bc))) * Dc
         end
 
         # Add meat to sandhwich
-        meat += Mc' * Wc * Ac * (Rc * Rc') * Ac * Wc * Mc
+        meat += Mc' * Wc * Ac * (ec * ec') * Ac * Wc * Mc
     end
 
     # Small sample correction factor
