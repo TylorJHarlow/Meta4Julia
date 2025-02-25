@@ -170,6 +170,7 @@ function rve(mdl::model; method::String = "CR0", smallsample::Bool = true)
         c = sqrt( C / (C - 1) )
         Ac = c * I
     elseif method == "CR2"
+        H = M * bread * M' * diagm(w)
         Phi = inv(diagm(w))
     end
 
